@@ -2,8 +2,6 @@
 import Sketch from "react-p5";
 import p5Types from "p5"; //Import this for typechecking and intellisense
 
-
-
 interface GameWindowProps {
   width: number;
   height: number;
@@ -75,11 +73,18 @@ const YourComponent: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     p5.rect(paddleX,paddleY,props.paddleWidth, props.paddleHeight);
   }
   const updatePaddle= (p5: p5Types) =>{
-    console.log(p5.mouseX, p5.mouseY);
-    if (!mousePressed) return;
-    if (p5.mouseY > paddleY + props.paddleHeight / 2 + 5)
+
+    if (!mousePressed){
+  
+      //handle keys
+
+      return ;
+    }
+
+    console.log(p5.mouseX,p5.mouseY)
+    if (p5.mouseY > paddleY + props.paddleHeight / 2 + props.paddleSpeed)
       paddleY += props.paddleSpeed;
-    else if(p5.mouseY < paddleY + props.paddleHeight / 2 - 5)
+    else if(p5.mouseY < paddleY + props.paddleHeight / 2 - props.paddleSpeed)
       paddleY -= props.paddleSpeed;
 
     if (p5.mouseY > paddleY + props.paddleHeight / 2)
@@ -87,10 +92,27 @@ const YourComponent: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     else
       paddleY = max(paddleY, 0);
   }
+  
+  // ball paddle collision
+  const handlePaddleBounce= (p5: p5Types) =>{
+  
+    if (
+         ballDirX == -1 
+      && ballY > paddleY
+      && ballY < paddleY + props.paddleHeight // ball in front of paddle and going toward paddle
+    ){
+      console.log("in paddle range")
+      ballX = max(ballX, props.ballRadius/2 + props.paddleWidth);
+      if (ballX - props.ballRadius/2 - props.paddleWidth <= 0)
+        ballDirX *= -1;
+    }
+  }
+
+
 	const draw = (p5: p5Types) => {
 
 		p5.background(0);
-    p5.frameRate(10);
+    p5.frameRate(30);
 
     //ball
 		drawBall(p5);
@@ -102,12 +124,13 @@ const YourComponent: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 
     // game logic ?
 
-    
+    handlePaddleBounce(p5);
 
 	};
 
 	return <Sketch setup={setup} draw={draw} />;
 };
+
 
 //Render using :
       <YourComponent 
