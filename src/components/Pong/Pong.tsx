@@ -33,8 +33,11 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
   let ballDirX: number = 1;
   let ballDirY: number = 1;
 
-  let paddleX : number = 0;
-  let paddleY : number = 0;
+  let paddleOneX : number = 0;
+  let paddleOneY : number = 0;
+
+  let paddleTwoX : number = props.width - props.paddleWidth;
+  let paddleTwoY : number = 0;
 
   let mousePressed : boolean = false;
 
@@ -66,10 +69,13 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       ballDirY *= -1;
 	};
 
-  const drawPaddle = (p5 : p5Types) =>{
-    p5.rect(paddleX,paddleY,props.paddleWidth, props.paddleHeight);
+  const drawPaddleOne = (p5 : p5Types) =>{
+    p5.rect(paddleOneX,paddleOneY,props.paddleWidth, props.paddleHeight);
   }
-  const updatePaddle= (p5: p5Types) =>{
+  const drawPaddleTwo = (p5 : p5Types) =>{
+    p5.rect(paddleTwoX,paddleTwoY,props.paddleWidth, props.paddleHeight);
+  }
+  const updatePaddleOne= (p5: p5Types) =>{
 
     if (!mousePressed){
   
@@ -79,28 +85,63 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     }
 
     console.log(p5.mouseX,p5.mouseY)
-    if (p5.mouseY > paddleY + props.paddleHeight / 2 + props.paddleSpeed)
-      paddleY += props.paddleSpeed;
-    else if(p5.mouseY < paddleY + props.paddleHeight / 2 - props.paddleSpeed)
-      paddleY -= props.paddleSpeed;
+    if (p5.mouseY > paddleOneY + props.paddleHeight / 2 + props.paddleSpeed)
+      paddleOneY += props.paddleSpeed;
+    else if(p5.mouseY < paddleOneY + props.paddleHeight / 2 - props.paddleSpeed)
+      paddleOneY -= props.paddleSpeed;
 
-    if (p5.mouseY > paddleY + props.paddleHeight / 2)
-      paddleY = min(paddleY, props.height - props.paddleHeight);
+    if (p5.mouseY > paddleOneY + props.paddleHeight / 2)
+      paddleOneY = min(paddleOneY, props.height - props.paddleHeight);
     else
-      paddleY = max(paddleY, 0);
+      paddleOneY = max(paddleOneY, 0);
+  }
+  const updatePaddleTwo= (p5: p5Types) =>{
+
+    if (!mousePressed){
+  
+      //handle keys
+
+      return ;
+    }
+
+    console.log(p5.mouseX,p5.mouseY)
+    if (p5.mouseY > paddleTwoY + props.paddleHeight / 2 + props.paddleSpeed)
+      paddleTwoY += props.paddleSpeed;
+    else if(p5.mouseY < paddleTwoY + props.paddleHeight / 2 - props.paddleSpeed)
+      paddleTwoY -= props.paddleSpeed;
+
+    if (p5.mouseY > paddleTwoY + props.paddleHeight / 2)
+      paddleTwoY = min(paddleTwoY, props.height - props.paddleHeight);
+    else
+      paddleTwoY = max(paddleTwoY, 0);
   }
   
   // ball paddle collision
-  const handlePaddleBounce= (p5: p5Types) =>{
+  const handlePaddleOneBounce= (p5: p5Types) =>{
   
     if (
          ballDirX === -1 
-      && ballY > paddleY
-      && ballY < paddleY + props.paddleHeight // ball in front of paddle and going toward paddle
+      && ballY > paddleOneY
+      && ballY < paddleOneY + props.paddleHeight // ball in front of paddle and going toward paddle
     ){
-      console.log("in paddle range")
+      console.log("in paddle one range")
       ballX = max(ballX, props.ballRadius/2 + props.paddleWidth);
       if (ballX - props.ballRadius/2 - props.paddleWidth <= 0)
+        ballDirX *= -1;
+    }
+  }
+  const handlePaddleTwoBounce= (p5: p5Types) =>{
+  
+    if (
+         ballDirX === 1 
+      && ballY > paddleTwoY
+      && ballY < paddleTwoY + props.paddleHeight // ball in front of paddle and going toward paddle
+    ){
+      console.log("in paddle two range")
+
+      ballX = min(ballX, props.width - props.ballRadius/2 - props.paddleWidth);
+
+      if (ballX + props.ballRadius/2 + props.paddleWidth >= props.width)
         ballDirX *= -1;
     }
   }
@@ -114,6 +155,7 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 
 	};
   useEffect(() => {
+    console.log("bruh")
     return () => {
       canvas.remove();
     };
@@ -129,13 +171,18 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 		drawBall(p5);
 		updateBall(p5);
 
-    //paddle
-    drawPaddle(p5);
-    updatePaddle(p5);
+    //paddle one
+    drawPaddleOne(p5);
+    updatePaddleOne(p5);
+
+    //paddle two
+    drawPaddleTwo(p5);
+    updatePaddleTwo(p5);
 
     // game logic ?
 
-    handlePaddleBounce(p5);
+    handlePaddleOneBounce(p5);
+    handlePaddleTwoBounce(p5);
 
 	};
 
