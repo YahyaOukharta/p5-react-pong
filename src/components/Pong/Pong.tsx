@@ -2,6 +2,7 @@
 import Sketch from "react-p5";
 import p5Types from "p5"; //Import this for typechecking and intellisense
 import {useEffect} from "react"
+import { io, Socket } from "socket.io-client";
 
 interface GameWindowProps {
   width: number;
@@ -17,7 +18,19 @@ interface GameWindowProps {
   paddleSpeed: number;
 
 }
+interface GameState {
+  // Game variables
+  ballX: number;
+  ballY: number;
+  ballDirX: number;
+  ballDirY: number;
 
+  paddleOneX: number;
+  paddleOneY: number;
+
+  paddleTwoX: number;
+  paddleTwoY: number;
+}
 const min = (a : number , b : number)=>{
   return a < b ? a : b;
 }
@@ -84,12 +97,24 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       return ;
     }
 
-    console.log(p5.mouseX,p5.mouseY)
+    // console.log(p5.mouseX,p5.mouseY)
     if (p5.mouseY > paddleOneY + props.paddleHeight / 2 + props.paddleSpeed)
-      paddleOneY += props.paddleSpeed;
-    else if(p5.mouseY < paddleOneY + props.paddleHeight / 2 - props.paddleSpeed)
-      paddleOneY -= props.paddleSpeed;
+    {
+      //paddleOneY += props.paddleSpeed;
+      //console.log("going down");
+      
+      socket.emit("playerOne",{input:"DOWN"})
 
+    }
+    else if(p5.mouseY < paddleOneY + props.paddleHeight / 2 - props.paddleSpeed)
+    {
+      //paddleOneY -= props.paddleSpeed;
+      //console.log("going up");
+
+      socket.emit("playerOne",{input:"UP"})
+
+    }
+    return 
     if (p5.mouseY > paddleOneY + props.paddleHeight / 2)
       paddleOneY = min(paddleOneY, props.height - props.paddleHeight);
     else
@@ -104,7 +129,7 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       return ;
     }
 
-    console.log(p5.mouseX,p5.mouseY)
+    // console.log(p5.mouseX,p5.mouseY)
     if (p5.mouseY > paddleTwoY + props.paddleHeight / 2 + props.paddleSpeed)
       paddleTwoY += props.paddleSpeed;
     else if(p5.mouseY < paddleTwoY + props.paddleHeight / 2 - props.paddleSpeed)
@@ -124,7 +149,7 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       && ballY > paddleOneY
       && ballY < paddleOneY + props.paddleHeight // ball in front of paddle and going toward paddle
     ){
-      console.log("in paddle one range")
+      // console.log("in paddle one range")
       ballX = max(ballX, props.ballRadius/2 + props.paddleWidth);
       if (ballX - props.ballRadius/2 - props.paddleWidth <= 0)
         ballDirX *= -1;
@@ -137,7 +162,7 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       && ballY > paddleTwoY
       && ballY < paddleTwoY + props.paddleHeight // ball in front of paddle and going toward paddle
     ){
-      console.log("in paddle two range")
+      // console.log("in paddle two range")
 
       ballX = min(ballX, props.width - props.ballRadius/2 - props.paddleWidth);
 
@@ -145,19 +170,38 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
         ballDirX *= -1;
     }
   }
+  const applyState = () => {
 
+  }
   // SETUP
   let canvas : p5Types.Renderer;
+  let socket : Socket;
   const setup = (p5: p5Types, canvasParentRef: Element) => {
+    socket = io("ws://localhost:3001");
+
 		canvas = p5.createCanvas(props.width, props.height).parent(canvasParentRef);
     canvas.mousePressed(()=>{mousePressed = true});
     canvas.mouseReleased(()=>{mousePressed = false});
 
+    socket.on("gameState",(state: GameState)=>{
+      //console.log(state);
+      ballX = state.ballX;
+      ballY = state.ballY;
+      ballX = state.ballX
+      ballY = state.ballY
+      ballDirX = state.ballDirX
+      ballDirY = state.ballDirY
+      paddleOneX = state.paddleOneX
+      paddleOneY = state.paddleOneY
+      paddleTwoX = state.paddleTwoX
+      paddleTwoY = state.paddleTwoY
+    })
 	};
   useEffect(() => {
-    console.log("bruh")
+    //console.log("bruh")
     return () => {
       canvas.remove();
+      socket.close();
     };
   }, []);
 
@@ -165,11 +209,11 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 	const draw = (p5: p5Types) => {
 
 		p5.background(0);
-    p5.frameRate(30);
+    p5.frameRate(60);
 
     //ball
 		drawBall(p5);
-		updateBall(p5);
+		//updateBall(p5);
 
     //paddle one
     drawPaddleOne(p5);
@@ -177,12 +221,12 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 
     //paddle two
     drawPaddleTwo(p5);
-    updatePaddleTwo(p5);
+    // updatePaddleTwo(p5);
 
     // game logic ?
 
-    handlePaddleOneBounce(p5);
-    handlePaddleTwoBounce(p5);
+    // handlePaddleOneBounce(p5);
+    // handlePaddleTwoBounce(p5);
 
 	};
 
