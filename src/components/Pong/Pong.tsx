@@ -30,6 +30,9 @@ interface GameState {
 
   paddleTwoX: number;
   paddleTwoY: number;
+
+  state: 0 | 1 | 2; // 0 waiting for player to join // 1 playing // 2 opponent left  
+  players : Array<string>;
 }
 const min = (a : number , b : number)=>{
   return a < b ? a : b;
@@ -54,7 +57,8 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 
   let mousePressed : boolean = false;
 
-
+  let state : 0 | 1 | 2 = 0;
+  let players : Array<string> = []
 	
   const drawBall = (p5: p5Types) => {
 		p5.ellipse(ballX, ballY, props.ballRadius, props.ballRadius);
@@ -103,7 +107,8 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       //paddleOneY += props.paddleSpeed;
       //console.log("going down");
       
-      socket.emit("playerOne",{input:"DOWN"})
+      socket.emit("playerInput",{input:"DOWN"})
+      console.log("sending input player One")
 
     }
     else if(p5.mouseY < paddleOneY + props.paddleHeight / 2 - props.paddleSpeed)
@@ -111,7 +116,8 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
       //paddleOneY -= props.paddleSpeed;
       //console.log("going up");
 
-      socket.emit("playerOne",{input:"UP"})
+      socket.emit("playerInput",{input:"UP"})
+      console.log("sending input player One")
 
     }
     return 
@@ -131,10 +137,23 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 
     // console.log(p5.mouseX,p5.mouseY)
     if (p5.mouseY > paddleTwoY + props.paddleHeight / 2 + props.paddleSpeed)
-      paddleTwoY += props.paddleSpeed;
-    else if(p5.mouseY < paddleTwoY + props.paddleHeight / 2 - props.paddleSpeed)
-      paddleTwoY -= props.paddleSpeed;
+    {
+      //paddleTwoY += props.paddleSpeed;
+      //console.log("going down");
+      
+      socket.emit("playerInput",{input:"DOWN"})
+      //console.log("sending input player Two")
 
+    }
+    else if(p5.mouseY < paddleTwoY + props.paddleHeight / 2 - props.paddleSpeed)
+    {
+      //paddleTwoY -= props.paddleSpeed;
+      //console.log("going up");
+
+      socket.emit("playerInput",{input:"UP"})
+      //console.log("sending input player Two")
+    }
+    return 
     if (p5.mouseY > paddleTwoY + props.paddleHeight / 2)
       paddleTwoY = min(paddleTwoY, props.height - props.paddleHeight);
     else
@@ -183,18 +202,22 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     canvas.mousePressed(()=>{mousePressed = true});
     canvas.mouseReleased(()=>{mousePressed = false});
 
-    socket.on("gameState",(state: GameState)=>{
-      //console.log(state);
-      ballX = state.ballX;
-      ballY = state.ballY;
-      ballX = state.ballX
-      ballY = state.ballY
-      ballDirX = state.ballDirX
-      ballDirY = state.ballDirY
-      paddleOneX = state.paddleOneX
-      paddleOneY = state.paddleOneY
-      paddleTwoX = state.paddleTwoX
-      paddleTwoY = state.paddleTwoY
+    socket.emit("playerJoined");
+
+    socket.on("gameState",(data: GameState)=>{
+      //console.log(data);
+      ballX = data.ballX;
+      ballY = data.ballY;
+      ballX = data.ballX
+      ballY = data.ballY
+      ballDirX = data.ballDirX
+      ballDirY = data.ballDirY
+      paddleOneX = data.paddleOneX
+      paddleOneY = data.paddleOneY
+      paddleTwoX = data.paddleTwoX
+      paddleTwoY = data.paddleTwoY
+      state = data.state
+      players = data.players
     })
 	};
   useEffect(() => {
@@ -211,17 +234,33 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
 		p5.background(0);
     p5.frameRate(60);
 
+    if (!state){
+      p5.fill(0xffffff)
+      p5.textSize(40)
+      p5.text("Waiting for opponent to join...",50, props.height/2)
+      return ;
+    }
+    if (state == 2){
+      p5.fill(0xffffff)
+      p5.textSize(40)
+      p5.text("Opponent disconnected, refresh to play again...",50, props.height/2, )
+      return ;
+    }
+
     //ball
 		drawBall(p5);
 		//updateBall(p5);
 
     //paddle one
     drawPaddleOne(p5);
-    updatePaddleOne(p5);
+    if (players.indexOf(socket.id) == 0)
+      updatePaddleOne(p5);
 
     //paddle two
     drawPaddleTwo(p5);
-    // updatePaddleTwo(p5);
+
+    if (players.indexOf(socket.id) == 1)
+    updatePaddleTwo(p5);
 
     // game logic ?
 
