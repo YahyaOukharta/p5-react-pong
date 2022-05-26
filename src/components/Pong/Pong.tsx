@@ -1,6 +1,6 @@
 import Sketch from "react-p5";
 import p5Types from "p5"; //Import this for typechecking and intellisense
-import {useEffect} from "react"
+import React ,{useEffect} from "react"
 import { io, Socket } from "socket.io-client";
 
 interface GameWindowProps {
