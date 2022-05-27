@@ -3,6 +3,8 @@ import p5Types from "p5"; //Import this for typechecking and intellisense
 import React ,{useEffect} from "react"
 import { io, Socket } from "socket.io-client";
 
+import AuthService , {LoginDto, RegisterDto} from "../../services/auth/auth.service"
+
 interface GameWindowProps {
   width: number;
   height: number;
@@ -95,7 +97,21 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
   let canvas : p5Types.Renderer;
   let socket : Socket;
   const setup = (p5: p5Types, canvasParentRef: Element) => {
-    socket = io("ws://10.11.6.1:3001");
+    socket = io("ws://localhost:3001");
+
+
+    //login
+    const loginData : LoginDto = {email:"test@mail.com", password:"123456789"}
+    AuthService.login(loginData)
+    .then((d)=>{
+      console.log("all good",d)
+      console.log(AuthService.getCurrentUser());
+    })
+    .catch(e=>{
+      console.log("not so good",e)
+    })
+    //
+
 
 		canvas = p5.createCanvas(props.width, props.height).parent(canvasParentRef);
     canvas.mousePressed(()=>{mousePressed = true});
