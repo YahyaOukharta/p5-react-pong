@@ -9,6 +9,10 @@ interface RegisterDto{
     password: String;
     username: String;
 }
+interface LocalStorageUser{
+    email: String;
+    token: String;
+}
 class AuthService{
 
     async login(loginData : LoginDto):Promise<unknown>{
@@ -36,6 +40,6 @@ class AuthService{
 
 }
 
-export type {LoginDto, RegisterDto}
+export type {LoginDto, RegisterDto, LocalStorageUser}
 
 export default new AuthService();

@@ -4,6 +4,7 @@ import React ,{useEffect} from "react"
 import { io, Socket } from "socket.io-client";
 
 import AuthService , {LoginDto, RegisterDto} from "../../services/auth/auth.service"
+import UserService from "../../services/auth/user.service";
 
 interface GameWindowProps {
   width: number;
@@ -106,6 +107,10 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     .then((d)=>{
       console.log("all good",d)
       console.log(AuthService.getCurrentUser());
+      UserService.changeUsername(Date.now().toString())
+      .then((e)=>{
+
+      })
     })
     .catch(e=>{
       console.log("not so good",e)
