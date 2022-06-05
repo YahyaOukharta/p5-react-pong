@@ -155,6 +155,8 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     p5.frameRate(60);
 
     //print state
+    //console.log(state);
+
     if (!state){
       p5.fill(0xffffff)
       p5.textSize(40)
