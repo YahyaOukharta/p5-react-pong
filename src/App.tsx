@@ -13,16 +13,17 @@ import Navbar from "./components/Navbar"
 function App() {
   return (
     <div className="App">
-      <Navbar />
 
       <BrowserRouter>
+        <Navbar />
+
         <Routes>
-          {/* <Route path="/about">
+          <Route path="/about">
             about
           </Route>
-          <Route path="/users">
-            users
-          </Route> */}
+          <Route path="/home">
+            home
+          </Route>
           <Route path="/"
             element={
             <Pong
