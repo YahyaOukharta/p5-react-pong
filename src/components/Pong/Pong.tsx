@@ -3,8 +3,8 @@ import p5Types from "p5"; //Import this for typechecking and intellisense
 import React ,{useEffect} from "react"
 import { io, Socket } from "socket.io-client";
 
-import AuthService , {LoginDto, RegisterDto} from "../../services/auth/auth.service"
-import UserService from "../../services/auth/user.service";
+// import AuthService , {LoginDto, RegisterDto} from "../../services/auth/auth.service"
+// import UserService from "../../services/auth/user.service";
 
 interface GameWindowProps {
   width: number;
@@ -101,21 +101,21 @@ const Pong: React.FC<GameWindowProps> = (props: GameWindowProps) => {
     socket = io("ws://localhost:3001");
 
 
-    //login
-    const loginData : LoginDto = {email:"test@mail.com", password:"123456789"}
-    AuthService.login(loginData)
-    .then((d)=>{
-      console.log("all good",d)
-      console.log(AuthService.getCurrentUser());
-      UserService.changeUsername(Date.now().toString())
-      .then((e)=>{
+    // //login
+    // const loginData : LoginDto = {email:"test@mail.com", password:"123456789"}
+    // AuthService.login(loginData)
+    // .then((d)=>{
+    //   console.log("all good",d)
+    //   console.log(AuthService.getCurrentUser());
+    //   UserService.changeUsername(Date.now().toString())
+    //   .then((e)=>{
 
-      })
-    })
-    .catch(e=>{
-      console.log("not so good",e)
-    })
-    //
+    //   })
+    // })
+    // .catch(e=>{
+    //   console.log("not so good",e)
+    // })
+    // //
 
 
 		canvas = p5.createCanvas(props.width, props.height).parent(canvasParentRef);
