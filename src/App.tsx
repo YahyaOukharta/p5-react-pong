@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect ,useState} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {
   BrowserRouter,
@@ -6,16 +6,23 @@ import {
   Route,
   Link
 } from 'react-router-dom';
-
+import AuthService from "./services/auth/auth.service"
 import Pong from "./components/Pong"
 import Navbar from "./components/Navbar"
 
 function App() {
+
+
+  const [user, setUser] = useState<Object | null | undefined>()
+  useEffect(()=>{
+    setUser(AuthService.getCurrentUser());
+
+  },[])
   return (
     <div className="App">
 
       <BrowserRouter>
-        <Navbar />
+        <Navbar user={user} setUser={setUser}/>
 
         <Routes>
           <Route path="/about">

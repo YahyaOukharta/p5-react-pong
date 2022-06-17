@@ -1,66 +1,153 @@
 
-import React, { useState } from 'react';
-import { Navbar, Container, Nav, Modal, Form, NavDropdown, Button } from "react-bootstrap"
+import React, { ChangeEvent, useState } from 'react';
+import { Navbar, Container, Nav, Modal, Form, NavDropdown, Button, Alert } from "react-bootstrap"
 import { Link } from "react-router-dom"
 import AuthService from "../../services/auth/auth.service"
 import { LoginDto, RegisterDto } from "../../services/auth/auth.service"
+import validator from "validator"
+
 interface NavbarProps {
-
-
+  user: Object | null | undefined;
+  setUser: Function;
 }
 const NavBar: React.FC<NavbarProps> = (props: NavbarProps) => {
 
   // isLoading to freeze buttons 
   const [isLoading, setIsLoading] = useState(false)
-  const toggleisLoading = (): void => { setIsLoading(!isLoading) }
+  const toggleisLoading = (): void => { setIsLoading(!isLoading); console.log("toggled loading", isLoading) }
+
+  const handleLogout = ():void=>{
+    AuthService.logout();
+    props.setUser(null);
+  }
+
   //Login
   const [loginModalShow, setLoginModalShow] = useState(false);
   const toggleLoginModal = (): void => { setLoginModalShow(!loginModalShow) }
   const OnLoginModalClose = (): void => {
     toggleLoginModal()
-  }
 
+  }
+  //login data
+  const [loginDataEmail, setLoginDataEmail] = useState("")
+  const [loginDataPassword, setLoginDataPassword] = useState("")
+  const [loginFormError, setLoginFormError] = useState("") // login error alert
+  const handleLoginDataEmailUpdate = (e: ChangeEvent): void => {
+    if (isLoading) return;
+    let target: EventTarget | null = e.target;
+    if (target && (target as HTMLInputElement).value)
+      setLoginDataEmail((target as HTMLInputElement).value)
+  }
+  const handleLoginDataPasswordUpdate = (e: ChangeEvent): void => {
+    if (isLoading) return;
+    let target: EventTarget | null = e.target;
+    if (target && (target as HTMLInputElement).value)
+      setLoginDataPassword((target as HTMLInputElement).value)
+  }
+  //onsubmit login
   const onSubmitLoginForm = (): void => {
-    toggleisLoading();
-    const loginData: LoginDto = { email: "test@mail.com", password: "123456789" }
+    if (isLoading) return;
+    setIsLoading(true);
+    setLoginFormError("")
+    const loginData: LoginDto = { email: loginDataEmail, password: loginDataPassword }
     AuthService.login(loginData)
       .then((d) => {
-        console.log("all good", d)
-        console.log(AuthService.getCurrentUser());
+        // console.log("all good", d)
+        // console.log(AuthService.getCurrentUser());
+        props.setUser(AuthService.getCurrentUser());
+        toggleLoginModal();
         // UserService.changeUsername(Date.now().toString())
         //   .then((e) => {
 
         //   })
+
+        setIsLoading(false);
       })
       .catch(e => {
-        console.log("not so good", e)
+        //console.log("not so good", e)
+        if (e.code === "ERR_NETWORK") {
+          setLoginFormError("Network error")
+        }
+        else {
+          setLoginFormError("Wrong credentials");
+        }
+        setIsLoading(false);
       })
-
-    toggleisLoading();
   }
 
-  const onSubmitRegisterForm = (): void => {
-    toggleisLoading();
-    const registerData: RegisterDto = { username: "", email: "test2@mail.com", password: "123456789" }
-    AuthService.register(registerData)
-      .then((d) => {
-        console.log("registered good", d)
-        console.log(AuthService.getCurrentUser());
-        // UserService.changeUsername(Date.now().toString())
-        //   .then((e) => {
-
-        //   })
-      })
-      .catch(e => {
-        console.log("not so good", e)
-      })
-    toggleisLoading();
-  }
   //register
   const [registerModalShow, setRegisterModalShow] = useState(false);
   const toggleRegisterModal = (): void => { setRegisterModalShow(!registerModalShow) }
   const OnRegisterModalClose = (): void => {
     toggleRegisterModal()
+  }
+
+  //register data
+  const [registerDataUsername, setRegisterDataUsername] = useState("")
+  const [registerDataEmail, setRegisterDataEmail] = useState("")
+  const [registerDataPassword, setRegisterDataPassword] = useState("")
+  const [registerFormError, setRegisterFormError] = useState("") // login error alert
+  const [registerFormSuccess, setRegisterFormSuccess] = useState("") // login error alert
+
+  const handleRegisterDataUsernameUpdate = (e: ChangeEvent): void => {
+    if (isLoading) return;
+    let target: EventTarget | null = e.target;
+    if (target && (target as HTMLInputElement).value)
+      setRegisterDataUsername((target as HTMLInputElement).value)
+  }
+
+  const handleRegisterDataEmailUpdate = (e: ChangeEvent): void => {
+    if (isLoading) return;
+    let target: EventTarget | null = e.target;
+    if (target && (target as HTMLInputElement).value)
+      setRegisterDataEmail((target as HTMLInputElement).value)
+  }
+
+  const handleRegisterDataPasswordUpdate = (e: ChangeEvent): void => {
+    if (isLoading) return;
+    let target: EventTarget | null = e.target;
+    if (target && (target as HTMLInputElement).value)
+      setRegisterDataPassword((target as HTMLInputElement).value)
+  }
+  //onsubmit register
+  const onSubmitRegisterForm = (): void => {
+    setIsLoading(true);
+    setRegisterFormError("");
+    setRegisterFormSuccess("");
+
+    const registerData: RegisterDto = { username: registerDataUsername, email: registerDataEmail, password: "123456789" }
+    
+    console.log(registerData)
+    if(!validator.isEmail(registerData.email))
+    {
+      setRegisterFormError("Invalid Email");
+      setIsLoading(false);
+      return;
+    }
+    if(registerData.password ==="")
+    {
+      setRegisterFormError("Empty password");
+      setIsLoading(false);
+      return;
+    }
+    AuthService.register(registerData)
+      .then((d) => {
+        console.log("registered good", d)
+        console.log(AuthService.getCurrentUser());
+        setRegisterFormSuccess("Registered successfully");
+
+      })
+      .catch(e => {
+        //console.log("not so good", e)
+        if (e.code === "ERR_NETWORK") {
+          setRegisterFormError("Network error")
+        }
+        else {
+          setRegisterFormError("Email already used"); 
+        }
+        setIsLoading(false);
+      })
+    toggleisLoading();
   }
   return (
     <div className="">
@@ -75,11 +162,20 @@ const NavBar: React.FC<NavbarProps> = (props: NavbarProps) => {
               <Nav.Link as={Link} to="/">Home</Nav.Link>
               <Nav.Link as={Link} to="/about">About</Nav.Link>
             </Nav>
-            <NavDropdown title="Get started">
-              <NavDropdown.Item onClick={toggleLoginModal}>Login</NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item onClick={toggleRegisterModal}>Register</NavDropdown.Item>
-            </NavDropdown>
+
+            {props.user ?
+              <NavDropdown title="Welcome User">
+                <NavDropdown.Item >Play</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+              </NavDropdown>
+              :
+              <NavDropdown title="Get started">
+                <NavDropdown.Item onClick={toggleLoginModal}>Login</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item onClick={toggleRegisterModal}>Register</NavDropdown.Item>
+              </NavDropdown>
+            }
           </Navbar.Collapse>
         </Container>
       </Navbar>
@@ -100,8 +196,8 @@ const NavBar: React.FC<NavbarProps> = (props: NavbarProps) => {
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>Username</Form.Label>
-              <Form.Control type="text" placeholder="Enter username" />
+              <Form.Label>Email</Form.Label>
+              <Form.Control type="email" placeholder="Enter email" value={loginDataEmail} onChange={handleLoginDataEmailUpdate} />
               <Form.Text className="text-muted">
                 We'll never share your email with anyone else.
               </Form.Text>
@@ -109,13 +205,16 @@ const NavBar: React.FC<NavbarProps> = (props: NavbarProps) => {
 
             <Form.Group className="mb-3" controlId="formBasicPassword">
               <Form.Label>Password</Form.Label>
-              <Form.Control type="password" placeholder="Password" />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicCheckbox">
-              <Form.Check type="checkbox" label="Check me out" />
+              <Form.Control type="password" placeholder="Password" value={loginDataPassword} onChange={handleLoginDataPasswordUpdate} />
             </Form.Group>
 
+
           </Form>
+          {loginFormError &&
+            <Alert variant="danger">
+              {loginFormError}
+            </Alert>
+          }
         </Modal.Body>
 
         <Modal.Footer>
@@ -140,12 +239,36 @@ const NavBar: React.FC<NavbarProps> = (props: NavbarProps) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h4>Centered Modal</h4>
-          <p>
-            Cras mattis consectetur purus sit amet fermentum. Cras justo odio,
-            dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac
-            consectetur ac, vestibulum at eros.
-          </p>
+          <Form>
+            <Form.Group className="mb-3" controlId="formBasicEmail">
+              <Form.Label>Username</Form.Label>
+              <Form.Control type="text" placeholder="Enter username" value={registerDataUsername} onChange={handleRegisterDataUsernameUpdate} />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formBasicEmail">
+              <Form.Label>Email</Form.Label>
+              <Form.Control type="email" placeholder="Enter email" value={registerDataEmail} onChange={handleRegisterDataEmailUpdate} />
+              <Form.Text className="text-muted">
+                We'll never share your email with anyone else.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Label>Password</Form.Label>
+              <Form.Control type="password" placeholder="Password" value={registerDataPassword} onChange={handleRegisterDataPasswordUpdate} />
+            </Form.Group>
+
+
+          </Form>
+          {registerFormError &&
+            <Alert variant="danger">
+              {registerFormError}
+            </Alert>
+          }
+          {registerFormSuccess &&
+            <Alert variant="success">
+              {registerFormSuccess}
+            </Alert>
+          }
         </Modal.Body>
         <Modal.Footer>
           <Button variant="success" onClick={onSubmitRegisterForm} type="submit">
